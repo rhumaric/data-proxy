@@ -5,6 +5,11 @@ test('it return existing properties', (t) => {
   const proxy = chainOfResponsibility({ property: 'value' });
   t.is(proxy.property, 'value');
 });
+test('it works with symbols', (t) => {
+  const propertyName = Symbol('property');
+  const proxy = chainOfResponsibility({ [propertyName]: 'value' });
+  t.is(proxy[propertyName], 'value');
+});
 test('it implements a chain of responsibility', (t) => {
   const proxy = chainOfResponsibility([{}, { property: 'value' }]);
   t.is(proxy.property, 'value');
