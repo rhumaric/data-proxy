@@ -25,13 +25,13 @@ test('it allows to declare computed properties', (t) => {
 });
 test('it allows using the proxy for computing values', (t) => {
   const proxy = chainOfResponsibility([
-    { a: 1 },
+    { a: 'val' },
     {
-      b: 3,
-      c: compute((data) => data.a + data.b),
+      property: compute((data) => data.a + data.b),
     },
+    { b: compute(() => 'ue') },
   ]);
-  t.is(proxy.c, 4);
+  t.is(proxy.property, 'value');
 });
 test('it provides a way to grab the next value in the chain to computed properties', (t) => {
   const proxy = chainOfResponsibility([
@@ -48,6 +48,10 @@ test('it provides a way to grab the next value in the chain to computed properti
   t.is(proxy.property, 'hello world');
 });
 test('it provides a way to grab all the values of a given property', (t) => {
-  const proxy = chainOfResponsibility([{ a: collect }, { a: 1 }, { a: 2 }]);
-  t.deepEqual(proxy.a, [1, 2]);
+  const proxy = chainOfResponsibility([
+    { property: collect('values') },
+    { values: 1 },
+    { values: 2 },
+  ]);
+  t.deepEqual(proxy.property, [1, 2]);
 });

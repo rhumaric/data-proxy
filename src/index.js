@@ -1,36 +1,26 @@
 const SYMBOL_COMPUTED = Symbol('computed');
-const SYMBOL_COLLECT = Symbol('collect');
 
+/**
+ * Creates a new chain of responsibility proxy where
+ */
 exports.chainOfResponsibility = function chainOfResponsibility(sources) {
   const proxy = new Proxy(sources, {
-    get: withComputed(withCollect(get)),
+    get: withComputed(get),
   });
   return proxy;
 
   function withComputed(getter) {
     return function (sources, property) {
-      const { value, next } = getter(sources, property);
+      const { value, next, index } = getter(sources, property);
       if (value && value[SYMBOL_COMPUTED]) {
-        return value(proxy, next);
+        return value(proxy, next, index, sources);
       }
       return value;
     };
   }
 };
 
-function withCollect(getter) {
-  return function (sources, property) {
-    const result = getter(sources, property);
-    if (result.value === SYMBOL_COLLECT) {
-      return collect(sources, property, result.index + 1);
-    }
-    return result;
-  };
-}
-
-exports.collect = SYMBOL_COLLECT;
-
-exports.compute = function compute(computation) {
+function compute(computation) {
   const fn = function (...args) {
     return computation(...args);
   };
@@ -38,7 +28,9 @@ exports.compute = function compute(computation) {
   fn[SYMBOL_COMPUTED] = true;
 
   return fn;
-};
+}
+
+exports.compute = compute;
 
 function get(sources, property) {
   if (Array.isArray(sources)) {
@@ -64,6 +56,12 @@ function first(sources, property, startIndex = 0) {
   return { value: undefined, next() {}, index: sources.length };
 }
 
+exports.collect = function (property) {
+  return compute(function (data, next, index, sources) {
+    return collect(sources, property);
+  });
+};
+
 function collect(sources, property, fromIndex = 0) {
   const result = [];
   if (fromIndex < sources.length) {
@@ -73,5 +71,5 @@ function collect(sources, property, fromIndex = 0) {
       }
     }
   }
-  return { value: result, next: () => {}, index: sources.length };
+  return result;
 }
